@@ -1,119 +1,71 @@
 #include <iostream>
+#include <stack>
 class object {
  public:
   object() : x_(0), y_(0) {}
-  void moveRight() {
-    ++x_;
-  }
-  void moveLeft() {
-    --x_;
-  }
-  void moveUp() {
-    ++y_;
-  }
-  void modeDown() {
-    --y_;
+  void MoveTo(const int& x, const int& y) {
+    x_ = x;
+    y_ = y;
   }
 
-  int getX() {
-    return x_;
+  int getX() const { return x_; }
+  int getY() const { return y_; }
+
+ private:
+  int x_;
+  int y_;
+};
+
+class ICommand {
+ public:
+  virtual ~ICommand() {}
+  virtual void execute() = 0;
+  virtual void undo() = 0;
+};
+
+class MoveObjectCommand : public ICommand {
+ public:
+  MoveObjectCommand(object* obj, int x, int y) : obj_(obj), x_(x), y_(y), x_before_(obj->getX()), y_before_(obj->getY()) {}
+  void execute() override {
+    obj_->MoveTo(x_, y_);
   }
 
-  int getY() {
-    return y_;
+  void undo() override {
+    obj_->MoveTo(x_before_, y_before_);
   }
 
  private:
-  int x_, y_;
+  object* obj_;
+  int x_;
+  int y_;
+  int x_before_;
+  int y_before_;
 };
-
-class Command {
- public:
-  virtual ~Command() {}
-  virtual void execute(object& obj) = 0;
-};
-
-class MoveRightCommand : public Command {
- public:
-  void execute(object& obj) override {
-    obj.moveRight();
-  }
-};
-
-class MoveLeftCommand : public Command {
- public:
-  void execute(object& obj) override {
-    obj.moveLeft();
-  }
-};
-
-class MoveUpCommand : public Command {
- public:
-  void execute(object& obj) override {
-    obj.moveUp();
-  }
-};
-
-class MoveDownCommand : public Command {
- public:
-  void execute(object& obj) override {
-    obj.modeDown();
-  }
-};
-
 void printObjectCoordinates(object& obj) {
   std::cout << "Object has coordinates: " << obj.getX() << ", " << obj.getY() << std::endl;
 }
 
 class InputHandler {
  public:
-  ~InputHandler() {
-    delete button_d_;
-    delete button_a_;
-    delete button_s_;
-    delete button_w_;
-  }
-  Command* handleInput(const char& sym) {
+  ICommand* handleInput(const char& sym, object& obj) {
     switch (sym) {
     case 'd':
-      return button_d_;
+      return new MoveObjectCommand(&obj, obj.getX() + 1, obj.getY());
       break;
     case 'a':
-      return button_a_;
+      return new MoveObjectCommand(&obj, obj.getX() - 1, obj.getY());
       break;
     case 'w':
-      return button_w_;
+      return new MoveObjectCommand(&obj, obj.getX(), obj.getY() + 1);
       break;
     case 's':
-      return button_s_;
+      return new MoveObjectCommand(&obj, obj.getX(), obj.getY() - 1);
       break;
     default:
       break;
     }
     return nullptr;
   }
-
-  void setButton_d_(Command* button_d) {
-    button_d_ = button_d;
-  }
-
-  void setButton_a_(Command* button_a) {
-    button_a_ = button_a;
-  }
-
-  void setButton_w_(Command* button_w) {
-    button_w_ = button_w;
-  }
-
-  void setButton_s_(Command* button_s) {
-    button_s_ = button_s;
-  }
-
- private:
-  Command* button_d_;
-  Command* button_a_;
-  Command* button_w_;
-  Command* button_s_;
 };
 
 int main() {
@@ -121,17 +73,29 @@ int main() {
   char sym;
   printObjectCoordinates(obj);
   InputHandler input_handler;
-  input_handler.setButton_a_(new MoveLeftCommand());
-  input_handler.setButton_d_(new MoveRightCommand());
-  input_handler.setButton_s_(new MoveDownCommand());
-  input_handler.setButton_w_(new MoveUpCommand());
-  while ((sym = getchar()) != 'e') {
+  std::stack<ICommand*> command_stack;
+
+  while ((sym = getchar()) != 'q') {
     std::cin.get();
-    Command* command = input_handler.handleInput(sym);
-    if (command) {
-      command->execute(obj);
+    if (sym == 'z' && command_stack.size() > 0) {
+      ICommand* command = command_stack.top();
+      command_stack.pop();
+      command->undo();
+      delete command;
+    } else {
+      ICommand* command = input_handler.handleInput(sym, obj);
+      if (command) {
+        command->execute();
+        command_stack.push(command);
+      }
     }
     printObjectCoordinates(obj);
+  }
+
+  while (command_stack.empty()) {
+    ICommand* command = command_stack.top();
+    command_stack.pop();
+    delete command;
   }
   return 0;
 }
