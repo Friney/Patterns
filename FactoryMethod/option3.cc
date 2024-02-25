@@ -41,6 +41,7 @@ class FactoryJeep : public FactoryCar {
 };
 
 int main() {
+  // Если нужно чтобы код работал не для Porsche, а для Jeep, нужно изменить только фабрику
   FactoryPorsche factory;
   Car* car = factory.create();
   car->outInfo();
