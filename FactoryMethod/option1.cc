@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 class Car {
  public:
@@ -40,12 +41,9 @@ class FactoryCar {
 
 int main() {
   FactoryCar factory;
-  Car* car_in_city = factory.createCar(FactoryCar::city);
+  std::unique_ptr<Car> car_in_city(factory.createCar(FactoryCar::city));
   car_in_city->outInfo();
-
-  Car* car_in_off_road = factory.createCar(FactoryCar::off_road);
+  std::unique_ptr<Car> car_in_off_road(factory.createCar(FactoryCar::off_road));
   car_in_off_road->outInfo();
-  delete car_in_city;
-  delete car_in_off_road;
   return 0;
 }
