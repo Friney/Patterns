@@ -1,5 +1,7 @@
 #include <iostream>
+#include <memory>
 #include <stack>
+
 class object {
  public:
   object() : x_(0), y_(0) {}
@@ -68,25 +70,19 @@ void printObjectCoordinates(object& obj) {
 
 class InputHandler {
  public:
-  ~InputHandler() {
-    delete button_d_;
-    delete button_a_;
-    delete button_s_;
-    delete button_w_;
-  }
   ICommand* handleInput(const char& sym) {
     switch (sym) {
     case 'd':
-      return button_d_;
+      return button_d_.get();
       break;
     case 'a':
-      return button_a_;
+      return button_a_.get();
       break;
     case 'w':
-      return button_w_;
+      return button_w_.get();
       break;
     case 's':
-      return button_s_;
+      return button_s_.get();
       break;
     default:
       break;
@@ -95,26 +91,26 @@ class InputHandler {
   }
 
   void setButton_d_(ICommand* button_d) {
-    button_d_ = button_d;
+    button_d_ = std::unique_ptr<ICommand>(button_d);
   }
 
   void setButton_a_(ICommand* button_a) {
-    button_a_ = button_a;
+    button_a_ = std::unique_ptr<ICommand>(button_a);
   }
 
   void setButton_w_(ICommand* button_w) {
-    button_w_ = button_w;
+    button_w_ = std::unique_ptr<ICommand>(button_w);
   }
 
   void setButton_s_(ICommand* button_s) {
-    button_s_ = button_s;
+    button_s_ = std::unique_ptr<ICommand>(button_s);
   }
 
  private:
-  ICommand* button_d_;
-  ICommand* button_a_;
-  ICommand* button_w_;
-  ICommand* button_s_;
+  std::unique_ptr<ICommand> button_d_;
+  std::unique_ptr<ICommand> button_a_;
+  std::unique_ptr<ICommand> button_w_;
+  std::unique_ptr<ICommand> button_s_;
 };
 
 int main() {

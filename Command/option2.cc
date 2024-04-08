@@ -1,5 +1,7 @@
 #include <iostream>
 #include <stack>
+#include <memory>
+#include <queue>
 class object {
  public:
   object() : x_(0), y_(0) {}
@@ -47,7 +49,7 @@ void printObjectCoordinates(object& obj) {
 
 class InputHandler {
  public:
-  ICommand* handleInput(const char& sym, object& obj) {
+   ICommand* handleInput(const char& sym, object& obj) {
     switch (sym) {
     case 'd':
       return new MoveObjectCommand(&obj, obj.getX() + 1, obj.getY());
@@ -73,29 +75,21 @@ int main() {
   char sym;
   printObjectCoordinates(obj);
   InputHandler input_handler;
-  std::stack<ICommand*> command_stack;
+  std::stack<std::unique_ptr<ICommand>> command_stack;
 
   while ((sym = getchar()) != 'q') {
     std::cin.get();
     if (sym == 'z' && command_stack.size() > 0) {
-      ICommand* command = command_stack.top();
+      command_stack.top()->undo();
       command_stack.pop();
-      command->undo();
-      delete command;
     } else {
       ICommand* command = input_handler.handleInput(sym, obj);
       if (command) {
-        command->execute();
-        command_stack.push(command);
+        command_stack.push(std::unique_ptr<ICommand>(command));
+        command_stack.top()->execute();
       }
     }
     printObjectCoordinates(obj);
-  }
-
-  while (command_stack.empty()) {
-    ICommand* command = command_stack.top();
-    command_stack.pop();
-    delete command;
   }
   return 0;
 }
