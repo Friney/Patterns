@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 class Car {
  public:
@@ -43,11 +44,10 @@ class FactoryJeep : public FactoryCar {
 int main() {
   // Если нужно чтобы код работал не для Porsche, а для Jeep, нужно изменить только фабрику
   FactoryPorsche factory;
-  Car* car = factory.create();
+  std::unique_ptr<Car> car(factory.create());
   car->outInfo();
-  Car* car2 = factory.create();
+  
+  std::unique_ptr<Car> car2(factory.create());
   car2->outInfo();
-  delete car;
-  delete car2;
   return 0;
 }
